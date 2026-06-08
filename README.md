@@ -10,6 +10,12 @@ The goal is practical in-editor scripting: open project scripts from the Content
 - Windows x64 editor
 - Project C# scripts under `Source/`
 
+## Screenshots
+
+![Editor Preview](Media/Preview.png)
+
+![Settings Preview](Media/PreviewSettings.png)
+
 ## Features
 
 - Dockable in-editor code editor window
