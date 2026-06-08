@@ -1072,6 +1072,17 @@ namespace WsCodeEditorEditor
                 Column = column;
             }
         }
+
+        public override void OnDestroy()
+        {
+            SaveRequested = null;
+            DirtyChanged = null;
+            FindRequested = null;
+            GoToLineRequested = null;
+            DiagnosticsChanged = null;
+
+            base.OnDestroy();
+        }
     }
 }
 #endif

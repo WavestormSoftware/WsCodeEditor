@@ -91,13 +91,21 @@ namespace WsCodeEditorEditor
                     FilePath = fullPath,
                 };
                 editor.LoadText(text);
-                editor.SaveRequested += SaveCurrentFile;
-                editor.DirtyChanged += () => OnEditorDirtyChanged(fullPath);
-                editor.FindRequested += () => _findBox?.Focus();
-                editor.GoToLineRequested += () => _goLineBox?.Focus();
-                editor.DiagnosticsChanged += _ => UpdateHeader();
 
                 var document = new OpenDocument(fullPath, tab, editor, File.GetLastWriteTimeUtc(fullPath));
+
+                document.SaveRequestedHandler = SaveCurrentFile;
+                document.DirtyChangedHandler = () => OnEditorDirtyChanged(fullPath);
+                document.FindRequestedHandler = () => _findBox?.Focus();
+                document.GoToLineRequestedHandler = () => _goLineBox?.Focus();
+                document.DiagnosticsChangedHandler = _ => UpdateHeader();
+
+                editor.SaveRequested += document.SaveRequestedHandler;
+                editor.DirtyChanged += document.DirtyChangedHandler;
+                editor.FindRequested += document.FindRequestedHandler;
+                editor.GoToLineRequested += document.GoToLineRequestedHandler;
+                editor.DiagnosticsChanged += document.DiagnosticsChangedHandler;
+
                 _documentsByPath.Add(fullPath, document);
                 _documentsByTab.Add(tab, document);
 
@@ -209,7 +217,7 @@ namespace WsCodeEditorEditor
                 Height = 24f,
                 WatermarkText = "Find",
             };
-            _findBox.TextChanged += () => _activeDocument?.Editor.Find(_findBox.Text);
+            _findBox.TextChanged += OnFindBoxTextChanged;
 
             _goLineBox = new TextBox(false, 0, 0, 0)
             {
@@ -425,14 +433,28 @@ namespace WsCodeEditorEditor
             CloseDocument(_activeDocument);
         }
 
+        private void DisposeDocument(OpenDocument document)
+        {
+            if (document == null)
+                return;
+
+            document.Editor.SaveRequested -= document.SaveRequestedHandler;
+            document.Editor.DirtyChanged -= document.DirtyChangedHandler;
+            document.Editor.FindRequested -= document.FindRequestedHandler;
+            document.Editor.GoToLineRequested -= document.GoToLineRequestedHandler;
+            document.Editor.DiagnosticsChanged -= document.DiagnosticsChangedHandler;
+
+            _documentsByPath.Remove(document.Path);
+            _documentsByTab.Remove(document.Tab);
+            document.Tab.Dispose();
+        }
+
         private void CloseDocument(OpenDocument document)
         {
             if (document.Editor.IsDirty && WsCodeEditorSettings.Current.ConfirmUnsavedChanges && !ConfirmSaveBeforeClose(document))
                 return;
 
-            _documentsByPath.Remove(document.Path);
-            _documentsByTab.Remove(document.Tab);
-            document.Tab.Dispose();
+            DisposeDocument(document);
 
             _activeDocument = null;
             foreach (var pair in _documentsByTab)
@@ -469,6 +491,11 @@ namespace WsCodeEditorEditor
             if (int.TryParse(_goLineBox.Text, out var line))
                 _activeDocument.Editor.JumpToLine(line);
             _activeDocument.Editor.Focus();
+        }
+
+        private void OnFindBoxTextChanged()
+        {
+            _activeDocument?.Editor.Find(_findBox.Text);
         }
 
         private void UpdateHeader()
@@ -598,6 +625,24 @@ namespace WsCodeEditorEditor
 
         public override void OnDestroy()
         {
+            if (_tabs != null)
+                _tabs.SelectedTabChanged -= OnSelectedTabChanged;
+            if (_filterBox != null)
+                _filterBox.TextChanged -= RefreshFileTree;
+            if (_fileTree != null)
+                _fileTree.SelectedChanged -= OnFileTreeSelectionChanged;
+            if (_findBox != null)
+                _findBox.TextChanged -= OnFindBoxTextChanged;
+
+            var docs = new List<OpenDocument>(_documentsByPath.Values);
+            foreach (var doc in docs)
+            {
+                DisposeDocument(doc);
+            }
+            _documentsByPath.Clear();
+            _documentsByTab.Clear();
+            _activeDocument = null;
+
             if (_instance == this)
                 _instance = null;
 
@@ -610,6 +655,12 @@ namespace WsCodeEditorEditor
             public readonly Tab Tab;
             public readonly CodeEditorControl Editor;
             public DateTime LastWriteTimeUtc;
+
+            public Action SaveRequestedHandler;
+            public Action DirtyChangedHandler;
+            public Action FindRequestedHandler;
+            public Action GoToLineRequestedHandler;
+            public Action<int> DiagnosticsChangedHandler;
 
             public OpenDocument(string path, Tab tab, CodeEditorControl editor, DateTime lastWriteTimeUtc)
             {

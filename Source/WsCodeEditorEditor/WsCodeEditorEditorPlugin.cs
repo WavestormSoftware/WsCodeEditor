@@ -66,11 +66,19 @@ namespace WsCodeEditorEditor
 
             Editor.Options.RemoveCustomSettings(SettingsName);
 
-            _toolstripButton?.Dispose();
-            _toolstripButton = null;
+            if (_toolstripButton != null)
+            {
+                _toolstripButton.Clicked -= OnOpenWindow;
+                _toolstripButton.Dispose();
+                _toolstripButton = null;
+            }
 
-            _menuButton?.Dispose();
-            _menuButton = null;
+            if (_menuButton != null)
+            {
+                _menuButton.Clicked -= OnOpenWindow;
+                _menuButton.Dispose();
+                _menuButton = null;
+            }
 
             base.DeinitializeEditor();
         }
