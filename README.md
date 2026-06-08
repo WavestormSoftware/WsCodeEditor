@@ -44,7 +44,7 @@ Useful options include:
 
 1. Open `Tools > Plugins`.
 2. Use `Clone Project`.
-3. Enter the plugin repository URL.
+3. Enter `https://github.com/WavestormSoftware/WsCodeEditor.git`.
 4. Restart the editor.
 
 ### Manual
