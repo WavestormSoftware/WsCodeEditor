@@ -47,6 +47,7 @@ Thumbs.db
 *.lib
 *.sbr
 /Source/obj/
+ThirdParty/Roslyn/
 _ReSharper*/
 [Tt]est[Rr]esult*
 .vs/
