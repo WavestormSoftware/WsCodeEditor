@@ -1,0 +1,28 @@
+﻿{
+	"Name": "WsCodeEditor",
+	"Version": "1.0",
+	"Company": "Wavestorm Software",
+	"Copyright": "",
+	"GameTarget": "WsCodeEditorTarget",
+	"EditorTarget": "WsCodeEditorEditorTarget",
+	"References": [
+		{
+			"Name": "$(EnginePath)/Flax.flaxproj"
+		}
+	],
+	"DefaultScene": null,
+	"DefaultSceneSpawn": {
+		"Position": {
+			"X": 0.0,
+			"Y": 0.0,
+			"Z": 0.0
+		},
+		"Direction": {
+			"X": 0.0,
+			"Y": 0.0,
+			"Z": 0.0
+		}
+	},
+	"MinEngineVersion": "0.0.6167",
+	"EngineNickname": null
+}
